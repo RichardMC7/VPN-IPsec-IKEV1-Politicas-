@@ -1,6 +1,6 @@
 # VPN IPsec IKEv1 Basada en Políticas
 
-## 📌 Contenido
+##  Contenido
 
 - Objetivo de la VPN  
 - Topología  
@@ -10,13 +10,13 @@
 
 ---
 
-## 🎯 Objetivo de la VPN
+##  Objetivo de la VPN
 
 El objetivo de configurar una VPN utilizando **IPsec con IKEv1 basado en políticas (Policy-Based VPN)** es establecer un canal de comunicación seguro entre dos redes a través de una red pública como Internet, garantizando la **confidencialidad, integridad y autenticación** de la información transmitida.
 
 ---
 
-## 📊 Parámetros de la VPN IPsec IKEv1 (Basada en Políticas)
+##  Parámetros de la VPN IPsec IKEv1 (Basada en Políticas)
 
 | Parámetro                | Valor |
 |--------------------------|--------|
@@ -37,18 +37,46 @@ El objetivo de configurar una VPN utilizando **IPsec con IKEv1 basado en políti
 | Red protegida R3         | 192.168.20.0/24 ↔ 192.168.10.0/24 |
 
 ---
+---
 
-## 🖧 Topología
+##  Tabla de Enrutamiento
+
+###  R1 (ISP)
+
+| Red Destino | Máscara | Próximo Salto / Interfaz | Descripción |
+|-------------|----------|--------------------------|--------------|
+| 10.0.0.0 | 255.255.255.252 | Conectada (Fa0/1) | Enlace hacia R2 |
+| 10.0.0.4 | 255.255.255.252 | Conectada (Fa0/0) | Enlace hacia R3 |
+
+---
+
+###  R2 (Peer)
+
+| Red Destino | Máscara | Próximo Salto | Descripción |
+|-------------|----------|--------------|--------------|
+| 10.0.0.0 | 255.255.255.252 | Conectada | Enlace hacia ISP |
+| 192.168.20.0 | 255.255.255.0 | VPN (Crypto Map) | Tráfico cifrado hacia R3 |
+
+---
+
+###  R3 (Peer)
+
+| Red Destino | Máscara | Próximo Salto | Descripción |
+|-------------|----------|--------------|--------------|
+| 10.0.0.4 | 255.255.255.252 | Conectada | Enlace hacia ISP |
+| 192.168.10.0 | 255.255.255.0 | VPN (Crypto Map) | Tráfico cifrado hacia R2 |
+
+##  Topología
 
 <img width="926" height="614" alt="Topologia VPN" src="https://github.com/user-attachments/assets/8b5283a7-cea7-492b-b699-1708bd6b17ef" />
 
 ---
 
-## ⚙️ Configuración de Red
+##  Configuración de Red
 
-### 🔹 R2 (Peer)
+###  R2 (Peer)
 
-```bash
+``
 conf t
 crypto isakmp policy 10
  encryption aes 256
@@ -79,4 +107,38 @@ interface f0/0
 exit
 
 do wr
+--- 
+
+### R3 (Peer)
+conf t
+crypto isakmp policy 10
+ encr aes 256
+ hash sha
+ authentication pre-share
+ group 1
+ lifetime 86400
+exit
+
+crypto isakmp key cisco123 address 10.0.0.2
+
+ip access-list extended VPN
+ permit ip 192.168.20.0 0.0.0.255 192.168.10.0 0.0.0.255
+exit
+
+crypto ipsec transform-set VPN esp-aes 256 esp-sha256-hmac
+ mode tunnel
+exit
+
+crypto map VPN 10 ipsec-isakmp
+ set peer 10.0.0.2
+ match address VPN
+ set transform-set VPN
+exit
+
+interface f0/0
+ crypto map VPN
+exit
+
+do wr
+
 
