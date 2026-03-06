@@ -18,6 +18,28 @@ Además, se utiliza **EIGRP** como protocolo de enrutamiento dinámico para inte
 
 ---
 
+# Tabla de direccionamiento
+
+| Dispositivo | Interfaz | Dirección IP | Descripción |
+|---|---|---|---|
+| R4 (Hub) | G1/0 | 10.0.0.1 | Conexión hacia la red WAN |
+| R4 (Hub) | Tunnel0 | 172.16.0.1 /24 | Red DMVPN |
+| R4 (Hub) | LAN | 192.168.100.0 /24 | Red interna |
+
+| Dispositivo | Interfaz | Dirección IP | Descripción |
+|---|---|---|---|
+| R2 (Spoke1) | G1/0 | 10.0.0.2 | Conexión hacia WAN |
+| R2 (Spoke1) | Tunnel0 | 172.16.0.2 /24 | Red DMVPN |
+| R2 (Spoke1) | LAN | 192.168.10.0 /24 | Red interna |
+
+| Dispositivo | Interfaz | Dirección IP | Descripción |
+|---|---|---|---|
+| R3 (Spoke2) | G1/0 | 10.0.0.3 | Conexión hacia WAN |
+| R3 (Spoke2) | Tunnel0 | 172.16.0.3 /24 | Red DMVPN |
+| R3 (Spoke2) | LAN | 192.168.20.0 /24 | Red interna |
+
+---
+
 # Parámetros utilizados
 
 | Parámetro | Valor |
@@ -95,3 +117,115 @@ exit
 interface Tunnel0
  tunnel protection ipsec profile DMVPN_profile
 exit
+```
+
+### R2
+```bash
+conf t
+interface Tunnel0
+ ip address 172.16.0.2 255.255.255.0
+ tunnel source g1/0
+ tunnel mode gre multipoint
+ tunnel key 1
+
+ ip nhrp network-id 1
+ ip nhrp authentication CISCO
+ ip nhrp holdtime 60
+ ip nhrp map 172.16.0.1 10.0.0.1
+ ip nhrp nhs 172.16.0.1
+ ip nhrp map multicast 10.0.0.1
+exit
+
+router eigrp 1
+ no auto-summary
+ network 192.168.10.0 0.0.0.255
+ network 172.16.0.0 0.0.0.255
+exit
+
+interface Tunnel0
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+exit
+
+crypto isakmp policy 1
+ authentication pre-share
+ encryption aes 192
+ hash sha
+ group 5
+exit
+
+crypto isakmp key pepe address 0.0.0.0 0.0.0.0
+
+crypto ipsec transform-set DMVPN_transform esp-aes 192
+ mode transport
+exit
+
+crypto ipsec profile DMVPN_profile
+ set transform-set DMVPN_transform
+exit
+
+interface Tunnel0
+ tunnel protection ipsec profile DMVPN_profile
+exit
+```
+
+### R3
+```bash
+conf t
+interface Tunnel0
+ ip address 172.16.0.3 255.255.255.0
+ tunnel source g1/0
+ tunnel mode gre multipoint
+ tunnel key 1
+
+ ip nhrp network-id 1
+ ip nhrp authentication CISCO
+ ip nhrp holdtime 60
+ ip nhrp map 172.16.0.1 10.0.0.1
+ ip nhrp nhs 172.16.0.1
+ ip nhrp map multicast 10.0.0.1
+exit
+
+router eigrp 1
+ no auto-summary
+ network 192.168.20.0 0.0.0.255
+ network 172.16.0.0 0.0.0.255
+exit
+
+interface Tunnel0
+ ip mtu 1400
+ ip tcp adjust-mss 1360
+exit
+
+crypto isakmp policy 1
+ authentication pre-share
+ encryption aes 192
+ hash sha
+ group 5
+exit
+
+crypto isakmp key pepe address 0.0.0.0 0.0.0.0
+
+crypto ipsec transform-set DMVPN_transform esp-aes 192
+ mode transport
+exit
+
+crypto ipsec profile DMVPN_profile
+ set transform-set DMVPN_transform
+exit
+
+interface Tunnel0
+ tunnel protection ipsec profile DMVPN_profile
+exit
+```
+
+### Verificacion
+```bash
+show dmvpn
+show ip nhrp
+show interface tunnel0
+show ip eigrp neighbors
+show ip route
+show crypto isakmp sa
+show crypto ipsec sa
+```
