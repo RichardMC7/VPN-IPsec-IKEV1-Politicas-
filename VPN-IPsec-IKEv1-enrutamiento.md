@@ -26,6 +26,58 @@ A diferencia de la VPN basada en políticas, esta solución:
 
 ---
 
+##  Parámetros Utilizados (IPsec IKEv1 - Route-Based)
+
+###  Fase 1 (IKEv1)
+
+| Parámetro | Valor |
+|------------|------------|
+| Versión IKE | IKEv1 |
+| Modo | Main Mode |
+| Autenticación | Pre-Shared Key (PSK) |
+| Clave PSK | cisco123 |
+| Cifrado | AES |
+| Hash | SHA |
+| Grupo Diffie-Hellman | Group 2 |
+| Lifetime | 86400 segundos |
+
+---
+
+###  Fase 2 (IPsec)
+
+| Parámetro | Valor |
+|------------|------------|
+| Protocolo | ESP |
+| Cifrado | AES |
+| Integridad | SHA-HMAC |
+| Modo | Tunnel Mode |
+| Método de protección | IPsec Profile |
+| Tipo de VPN | Route-Based |
+| Interfaz utilizada | Tunnel0 |
+
+---
+
+###  Parámetros del Túnel
+
+| Parámetro | Valor |
+|------------|------------|
+| Red del túnel | 172.16.1.0/30 |
+| IP R2 (Tunnel0) | 172.16.1.1 |
+| IP R3 (Tunnel0) | 172.16.1.2 |
+| Source R2 | 10.0.0.2 |
+| Destination R2 | 10.0.0.6 |
+| Source R3 | 10.0.0.6 |
+| Destination R3 | 10.0.0.2 |
+
+---
+
+###  Redes Protegidas
+
+| Router | Red Local |
+|----------|-------------|
+| R2 | 192.168.10.0/24 |
+| R3 | 192.168.20.0/24 |
+
 ## 📡 Tabla de Direccionamiento
 
 ### 🔹 R2
