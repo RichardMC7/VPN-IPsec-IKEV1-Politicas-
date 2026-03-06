@@ -1,6 +1,6 @@
 # VPN IPsec IKEv1 Basada en Políticas (Policy-Based VPN)
 
-## 📌 Contenido
+##  Contenido
 
 - Objetivo de la VPN  
 - Topología  
@@ -11,7 +11,7 @@
 
 ---
 
-## 🎯 Objetivo de la VPN
+##  Objetivo de la VPN
 
 El objetivo de esta configuración es establecer una **VPN IPsec utilizando IKEv1 basada en políticas (Policy-Based VPN)** para permitir la comunicación segura entre dos redes a través de una red pública (Internet).
 
