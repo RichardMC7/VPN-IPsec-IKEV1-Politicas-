@@ -1,70 +1,28 @@
-# VPN IPsec IKEv1 Basada en Políticas
+# VPN IPsec IKEv1 Basada en Políticas (Policy-Based VPN)
 
-##  Contenido
+## 📌 Contenido
 
 - Objetivo de la VPN  
 - Topología  
-- Configuración de Red  
 - Parámetros Utilizados  
+- Configuración de Red  
+- Tabla de Enrutamiento  
 - Verificación  
 
 ---
 
-##  Objetivo de la VPN
+## 🎯 Objetivo de la VPN
 
-El objetivo de configurar una VPN utilizando **IPsec con IKEv1 basado en políticas (Policy-Based VPN)** es establecer un canal de comunicación seguro entre dos redes a través de una red pública como Internet, garantizando la **confidencialidad, integridad y autenticación** de la información transmitida.
+El objetivo de esta configuración es establecer una **VPN IPsec utilizando IKEv1 basada en políticas (Policy-Based VPN)** para permitir la comunicación segura entre dos redes a través de una red pública (Internet).
 
----
+La VPN garantiza:
 
-##  Parámetros de la VPN IPsec IKEv1 (Basada en Políticas)
-
-| Parámetro                | Valor |
-|--------------------------|--------|
-| Versión IKE              | IKEv1 |
-| Modo Fase 1              | Main Mode |
-| Autenticación            | Pre-Shared Key (PSK) |
-| Clave PSK                | cisco123 |
-| Cifrado Fase 1           | AES-256 |
-| Hash Fase 1              | SHA |
-| Grupo Diffie-Hellman     | Group 1 |
-| Lifetime Fase 1 (R2)     | 3600 segundos |
-| Lifetime Fase 1 (R3)     | 86400 segundos |
-| Cifrado Fase 2 (IPsec)   | ESP-AES-256 |
-| Hash Fase 2              | ESP-SHA256-HMAC |
-| Modo IPsec               | Tunnel Mode |
-| Selección de tráfico     | Crypto ACL |
-| Red protegida R2         | 192.168.10.0/24 ↔ 192.168.20.0/24 |
-| Red protegida R3         | 192.168.20.0/24 ↔ 192.168.10.0/24 |
+-  **Confidencialidad**
+-  **Autenticación**
+-  **Integridad**
+-  **Protección del tráfico entre redes internas**
 
 ---
----
-
-##  Tabla de Enrutamiento
-
-###  R1 (ISP)
-
-| Red Destino | Máscara | Próximo Salto / Interfaz | Descripción |
-|-------------|----------|--------------------------|--------------|
-| 10.0.0.0 | 255.255.255.252 | Conectada (Fa0/1) | Enlace hacia R2 |
-| 10.0.0.4 | 255.255.255.252 | Conectada (Fa0/0) | Enlace hacia R3 |
-
----
-
-###  R2 (Peer)
-
-| Red Destino | Máscara | Próximo Salto | Descripción |
-|-------------|----------|--------------|--------------|
-| 10.0.0.0 | 255.255.255.252 | Conectada | Enlace hacia ISP |
-| 192.168.20.0 | 255.255.255.0 | VPN (Crypto Map) | Tráfico cifrado hacia R3 |
-
----
-
-###  R3 (Peer)
-
-| Red Destino | Máscara | Próximo Salto | Descripción |
-|-------------|----------|--------------|--------------|
-| 10.0.0.4 | 255.255.255.252 | Conectada | Enlace hacia ISP |
-| 192.168.10.0 | 255.255.255.0 | VPN (Crypto Map) | Tráfico cifrado hacia R2 |
 
 ##  Topología
 
@@ -72,18 +30,45 @@ El objetivo de configurar una VPN utilizando **IPsec con IKEv1 basado en políti
 
 ---
 
+##  Parámetros Utilizados (IPsec IKEv1)
+
+| Parámetro | Valor |
+|------------|------------|
+| Versión IKE | IKEv1 |
+| Fase 1 | Main Mode |
+| Autenticación | Pre-Shared Key (PSK) |
+| Clave PSK | cisco123 |
+| Cifrado Fase 1 | AES-256 |
+| Hash Fase 1 | SHA |
+| Grupo Diffie-Hellman | Group 1 |
+| Lifetime Fase 1 (R2) | 3600 segundos |
+| Lifetime Fase 1 (R3) | 86400 segundos |
+| Cifrado Fase 2 | ESP-AES-256 |
+| Hash Fase 2 | ESP-SHA256-HMAC |
+| Modo IPsec | Tunnel Mode |
+| Selección de tráfico | Crypto ACL |
+
+### Redes Protegidas
+
+- **R2 ↔ R3**
+  - 192.168.10.0/24
+  - 192.168.20.0/24
+
+---
+
 ##  Configuración de Red
 
-###  R2 (Peer)
+### 🔹 R2 (Peer)
 
-``
+```bash
 conf t
+
 crypto isakmp policy 10
  encryption aes 256
  hash sha
  authentication pre-share
- lifetime 3600
  group 1
+ lifetime 3600
 exit
 
 crypto isakmp key cisco123 address 10.0.0.6
@@ -98,8 +83,8 @@ exit
 
 crypto map VPN 10 ipsec-isakmp
  set peer 10.0.0.6
- match address VPN
  set transform-set VPN
+ match address VPN
 exit
 
 interface f0/0
@@ -107,12 +92,14 @@ interface f0/0
 exit
 
 do wr
---- 
 
+```
 ### R3 (Peer)
+```bash
 conf t
+
 crypto isakmp policy 10
- encr aes 256
+ encryption aes 256
  hash sha
  authentication pre-share
  group 1
@@ -131,8 +118,8 @@ exit
 
 crypto map VPN 10 ipsec-isakmp
  set peer 10.0.0.2
- match address VPN
  set transform-set VPN
+ match address VPN
 exit
 
 interface f0/0
@@ -140,5 +127,13 @@ interface f0/0
 exit
 
 do wr
+```
 
+### Verificacion 
+```bash
+show crypto isakmp sa
+show crypto ipsec sa
+show crypto map
+ping 192.168.20.1
+```
 
